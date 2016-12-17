@@ -400,6 +400,27 @@ __luaver_usage()
     __luaver_print_formatted "   luaver uninstall 5.3.0                   # Uninstalls lua version 5.3.0"
 }
 
+__luaver_find_matching_lua()
+{
+	local semver=$1
+	local major='.'
+	local minor='.'
+	local patch='.'
+	if echo ${semver} | grep './../../.'
+	then
+		major=echo ${semver} | cut -f 1 -d .
+		minor=echo ${semver} | cut -f 2 -d .
+		patch=echo ${semver} | cut -f 3 -d .
+	elif echo ${semver} | grep './../.'
+	then
+		major=echo ${semver} | cut -f 1 -d .
+		minor=echo ${semver} | cut -f 2 -d .
+	else
+		major=echo ${semver} | cut -f 1
+	fi
+	curl 'https://www.lua.org/ftp/' 2>/dev/null | grep --only-matching $(printf 'lua\-%s\.%s\.%s\.tar\.gz' ${major} ${minor} ${patch}) | sort --generic-numeric | head -n 1
+}
+
 __luaver_install_lua()
 {
     local version=$1
