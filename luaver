@@ -400,7 +400,7 @@ __luaver_usage()
     __luaver_print_formatted "   luaver uninstall 5.3.0                   # Uninstalls lua version 5.3.0"
 }
 
-__luaver_find_matching_lua()
+__luaver_semver_to_regex()
 {
 	local semver=$1
 	local major='[0-9]+'
@@ -408,17 +408,24 @@ __luaver_find_matching_lua()
 	local patch='[0-9]+'
 	if echo ${semver} | grep './../../.'
 	then
-		major=echo ${semver} | cut -f 1 -d .
-		minor=echo ${semver} | cut -f 2 -d .
-		patch=echo ${semver} | cut -f 3 -d .
+		major="$(echo ${semver} | cut -f 1 -d .)"
+		minor="$(echo ${semver} | cut -f 2 -d .)"
+		patch="$(echo ${semver} | cut -f 3 -d .)"
 	elif echo ${semver} | grep './../.'
 	then
-		major=echo ${semver} | cut -f 1 -d .
-		minor=echo ${semver} | cut -f 2 -d .
+		major="$(echo ${semver} | cut -f 1 -d .)"
+		minor="$(echo ${semver} | cut -f 2 -d .)"
 	else
-		major=echo ${semver} | cut -f 1
+		major="$(echo ${semver} | cut -f 1)"
 	fi
-	curl 'https://www.lua.org/ftp/' 2>/dev/null | grep --only-matching $(printf 'lua\-%s\.%s\.%s\.tar\.gz' ${major} ${minor} ${patch}) | sort --numeric-sort --reverse | head -n 1
+	printf '\.\.\.' ${major} ${minor} ${patch}
+}
+
+__luaver_find_latest_matching_lua()
+{
+	local semver=$1
+	local regex="$(__luaver_semver_to_regex ${semver})"
+	curl 'https://www.lua.org/ftp/' 2>/dev/null | grep --only-matching ${regex} | sort --numeric-sort --reverse | head -n 1
 }
 
 __luaver_install_lua()
