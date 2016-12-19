@@ -406,19 +406,24 @@ __luaver_semver_to_regex()
 	local major='[0-9]+'
 	local minor='[0-9]+'
 	local patch='[0-9]+'
-	if echo ${semver} | grep './../../.'
+	local semver_length="$(grep --only-matching '\.' <<< "$semver" | wc -l)"
+	if
+		__luaver_error "${semver} is not a valid semver version string"
+	(( semver_length++ ))
+	if (( $semver_length == 3 ))
 	then
 		major="$(echo ${semver} | cut -f 1 -d .)"
 		minor="$(echo ${semver} | cut -f 2 -d .)"
 		patch="$(echo ${semver} | cut -f 3 -d .)"
-	elif echo ${semver} | grep './../.'
+	elif (( $semver_length == 2 ))
 	then
 		major="$(echo ${semver} | cut -f 1 -d .)"
 		minor="$(echo ${semver} | cut -f 2 -d .)"
-	else
+	elif (( $semver_length == 1 ))
+	then
 		major="$(echo ${semver} | cut -f 1)"
 	fi
-	printf '\.\.\.' ${major} ${minor} ${patch}
+	printf '%s\\.%s\\.%s\n' ${major} ${minor} ${patch}
 }
 
 __luaver_find_latest_matching_lua()
